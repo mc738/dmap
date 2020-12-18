@@ -5,7 +5,7 @@ use crypto::digest::Digest;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DirectoryInfo {
     path: String,
-    hash: String,
+    pub(crate) hash: String,
     children: Vec<DirectoryInfo>,
     files: Vec<FileInfo>
 }
@@ -13,7 +13,7 @@ pub struct DirectoryInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileInfo {
     path: String,
-    hash: String
+    pub(crate) hash: String
 }
 
 impl DirectoryInfo {

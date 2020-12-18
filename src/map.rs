@@ -23,10 +23,8 @@ pub fn create_map(path: &Path) -> Result<DirectoryInfo, &'static str> {
 }
 
 pub fn save_map(map: DirectoryInfo, path: &Path) -> Result<(), &'static str> {
-
     let json = serde_json::to_string(&map).unwrap();
-
-
+    
     let mut output = File::create(path).unwrap();
     output.write_all(json.as_ref());
 
@@ -82,6 +80,29 @@ fn map_directory(path: &Path) -> io::Result<DirectoryInfo> {
         };
         //hash_file(entry.as_path());
     };
+    
+    let hash = hash_directory(&children, &files);
 
-    Ok(DirectoryInfo::create(path.to_string_lossy().parse().unwrap(), "".to_string(), children, files))
+    Ok(DirectoryInfo::create(path.to_string_lossy().parse().unwrap(), hash, children, files))
+}
+
+fn hash_directory(children: &Vec<DirectoryInfo>, files: &Vec<FileInfo>) -> String {
+    let mut buffer = String::new();
+
+    let mut hasher = Sha256::new();
+
+    // Append all directory hashes.
+    for c in children {
+        buffer.push_str(&c.hash);
+        
+    };
+
+    // Append all file hashes.
+    for f in files {
+        buffer.push_str(&f.hash);
+    };
+
+    hasher.input_str(&*buffer);
+
+    hasher.result_str()
 }

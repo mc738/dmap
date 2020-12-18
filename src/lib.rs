@@ -30,8 +30,9 @@ pub fn map(path: &Path, output: &Path) {
 
     match map {
         Ok(di) => {
-
-            println!("Save map to `{:?}`", output);
+            
+            println!("Mapped! Directory hash: {}", di.hash);
+            println!("Saving map to `{:?}`", output);
             match save_map(di, output) {
                 Ok(_) => {
                     println!("Done");

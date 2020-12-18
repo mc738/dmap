@@ -1,13 +1,14 @@
 use serde::{Deserialize, Serialize};
 use crypto::sha2::Sha256;
 use crypto::digest::Digest;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DirectoryInfo {
     path: String,
     pub(crate) hash: String,
     children: Vec<DirectoryInfo>,
-    files: Vec<FileInfo>
+    pub(crate) files: Vec<FileInfo>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,6 +25,16 @@ impl DirectoryInfo {
             children,
             files
         }
+    }
+    
+    pub fn files_to_dict(&self) -> HashMap<String, String> {
+        let mut dict: HashMap<String, String> = HashMap::with_capacity(self.files.len());
+        
+        for fi in &self.files {
+            dict.insert(fi.path.clone(), fi.hash.clone());
+        };
+        
+        dict
     }
 }
 

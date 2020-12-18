@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use crypto::sha2::Sha256;
+use crypto::digest::Digest;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DirectoryInfo {
@@ -32,4 +34,10 @@ impl FileInfo {
             hash
         }
     }
+}
+
+pub fn create_hash(mut data: Vec<u8>) -> String {
+    let mut hasher = Sha256::new();
+    hasher.input(data.as_slice());
+    hasher.result_str()
 }

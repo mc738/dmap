@@ -23,8 +23,7 @@ pub fn map(path: &Path, output: &Path) {
 
     // Map the directory and sub directories.
     // TODO add excludes/ignores.
-
-
+    
     println!("Mapping directory `{:?}`", path);
     
     let map = map_directory(path).unwrap();

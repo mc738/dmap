@@ -15,6 +15,12 @@ pub struct MapCommand {
 }
 
 #[derive(Debug)]
+pub struct CompareCommand {
+    dir_1: String,
+    dir_2: String
+}
+
+#[derive(Debug)]
 pub struct CommandError {
     message: String,
     hint: String
@@ -23,6 +29,7 @@ pub struct CommandError {
 #[derive(Debug)]
 pub enum Command {
     Map(MapCommand),
+    Compare(CompareCommand),
     Error(CommandError)
 }
 
@@ -31,6 +38,15 @@ impl MapCommand {
         MapCommand {
             path,
             output
+        }
+    }
+}
+
+impl CompareCommand {
+    pub fn create(dir_1: String, dir_2: String) -> CompareCommand {
+        CompareCommand {
+            dir_1,
+            dir_2
         }
     }
 }
@@ -55,17 +71,35 @@ fn get_args() -> Command {
     
     if args_len > 2 {
         match &args[1] {
-            run => {
-                
-                if args_len >= 4 {
-                   Command::Map(MapCommand::create(args[2].clone(), args[3].clone()))
+            command => {
+                match command.as_ref() {
+                    "map" => {
+                        if args_len >= 4 {
+                            Command::Map(MapCommand::create(args[2].clone(), args[3].clone()))
+                        }
+                        else {
+                            Command::Error(CommandError::create(
+                                "Too few args for `map` command".to_string(),
+                                "Syntax: `dmap map [path] [output]`.".to_string()))
+                        }
+                    }
+                    "compare" => {
+                        if args_len >= 4 {
+                            Command::Compare(CompareCommand::create(args[2].clone(), args[3].clone()))
+                        }
+                        else {
+                            Command::Error(CommandError::create(
+                                "Too few args for `compare` command".to_string(),
+                                "Syntax: `dmap compare [dir_1] [dir_2]`.".to_string()))
+                        }
+                    }
+                    _ => {
+                        Command::Error(CommandError::create(
+                            format!("Unknown command: `{}`", command),
+                            "Known commands include `map` and `compare`.".to_string()))
+                        
+                    }
                 }
-                else {
-                    Command::Error(CommandError::create(
-                        "Too few args for `run` command".to_string(),
-                        "Syntax: `dmap map [path] [output]`.".to_string()))
-                }
-                
             }
             _ => {
                 Command::Error(CommandError::create(
@@ -90,6 +124,11 @@ fn run_command(command: Command) -> Result<(), &'static str> {
             dmap::map(comm.path.as_ref(), comm.output.as_ref());
             
             // read_directory(comm.path.as_ref());
+        }
+        Command::Compare(comm) => {
+            println!("Comparing directories `{}` and `{}`...", comm.dir_1, comm.dir_2);
+            
+            dmap::compare(comm.dir_1.as_ref(), comm.dir_2.as_ref());
         }
         Error(error) => {
             println!("Command error!");

@@ -2,7 +2,7 @@ use std::fs::{File, read_dir};
 use std::io::{BufReader, Read, Write};
 use crypto::sha2::Sha256;
 use crypto::digest::Digest;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::io;
 use crate::common::{DirectoryInfo, FileInfo};
 use crate::common;
@@ -33,6 +33,7 @@ pub fn save_map(map: DirectoryInfo, path: &Path) -> Result<(), &'static str> {
     Ok(())
 }
 
+
 fn map_directory(path: &Path) -> io::Result<DirectoryInfo> {
     let mut entries = read_dir(path)?
         .map(|res| res.map(|e| e.path()))
@@ -62,7 +63,7 @@ fn map_directory(path: &Path) -> io::Result<DirectoryInfo> {
 
                     let hash = common::create_hash(data);
 
-                    let fi = FileInfo::create(entry.into_os_string().into_string().unwrap(), hash);
+                    let fi = FileInfo::create(entry.strip_prefix(path).expect("").to_str().expect("").parse().unwrap(), hash);
 
                     files.push(fi);
 
@@ -105,4 +106,48 @@ fn hash_directory(children: &Vec<DirectoryInfo>, files: &Vec<FileInfo>) -> Strin
     hasher.input_str(&*buffer);
 
     hasher.result_str()
+}
+
+// This routine is adapted from the *old* Path's `path_relative_from`
+// function, which works differently from the new `relative_from` function.
+// In particular, this handles the case on unix where both paths are
+// absolute but with only the root as the common directory.
+fn path_relative_from(path: &Path, base: &Path) -> Option<PathBuf> {
+    use std::path::Component;
+
+    if path.is_absolute() != base.is_absolute() {
+        if path.is_absolute() {
+            Some(PathBuf::from(path))
+        } else {
+            None
+        }
+    } else {
+        let mut ita = path.components();
+        let mut itb = base.components();
+        let mut comps: Vec<Component> = vec![];
+        loop {
+            match (ita.next(), itb.next()) {
+                (None, None) => break,
+                (Some(a), None) => {
+                    comps.push(a);
+                    comps.extend(ita.by_ref());
+                    break;
+                }
+                (None, _) => comps.push(Component::ParentDir),
+                (Some(a), Some(b)) if comps.is_empty() && a == b => (),
+                (Some(a), Some(b)) if b == Component::CurDir => comps.push(a),
+                (Some(_), Some(b)) if b == Component::ParentDir => return None,
+                (Some(a), Some(_)) => {
+                    comps.push(Component::ParentDir);
+                    for _ in itb {
+                        comps.push(Component::ParentDir);
+                    }
+                    comps.push(a);
+                    comps.extend(ita.by_ref());
+                    break;
+                }
+            }
+        }
+        Some(comps.iter().map(|c| c.as_os_str()).collect())
+    }
 }

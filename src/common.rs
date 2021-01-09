@@ -5,9 +5,9 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DirectoryInfo {
-    path: String,
+    pub(crate) path: String,
     pub(crate) hash: String,
-    children: Vec<DirectoryInfo>,
+    pub(crate) children: Vec<DirectoryInfo>,
     pub(crate) files: Vec<FileInfo>
 }
 

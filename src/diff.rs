@@ -4,12 +4,14 @@ use serde::de::Unexpected::Map;
 use std::collections::HashMap;
 use std::borrow::Borrow;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum Diff {
     Add(String),
     Remove(String),
     Changed(String)
 }
+
+//impl Eq for Diff {}
 
 pub fn calc_diff(dir1: DirectoryInfo, dir2: DirectoryInfo) -> Vec<Diff> {
     // Check if the maps are the same length
@@ -44,11 +46,14 @@ pub fn calc_diff(dir1: DirectoryInfo, dir2: DirectoryInfo) -> Vec<Diff> {
     //diffs.append(&mut dir_diff);
     diffs.append(&mut file_diff);
     
+    diffs.sort();
+    
     diffs
     
 }
 
-/*fn handle_dirs(dir1: Vec<DirectoryInfo>, dir2: Vec<DirectoryInfo>) -> Vec<Diff> {
+/*
+fn handle_dirs(dir1: Vec<DirectoryInfo>, dir2: Vec<DirectoryInfo>) -> Vec<Diff> {
     //
     let pair = (dir1.len(), dir2.len());
 
@@ -65,7 +70,7 @@ pub fn calc_diff(dir1: DirectoryInfo, dir2: DirectoryInfo) -> Vec<Diff> {
         (m1, m2) if m1 > m2 => handle_dir2_larger(&mut map1, &mut map2),
         _ => Vec::new() //This should not be hit.
     }
-}*/
+} */
 
 fn handle_equal_len(map1: &HashMap<String,String>, map2: &mut HashMap<String,String>) -> Vec<Diff> {
     
@@ -110,8 +115,7 @@ fn handle_equal_len(map1: &HashMap<String,String>, map2: &mut HashMap<String,Str
         diffs.push(Diff::Add(k.clone()));
     };
     
-    // TODO Add check to make sure both maps are empty.
-    
+    // TODO Add check to make sure both maps are empty.    
     diffs
 }
 
@@ -209,7 +213,9 @@ fn compare_hashes(file1: &FileInfo, file2: &FileInfo) -> bool {
     file1.hash == file2.hash
 }
 
-/*fn handle_equal_len_dir(dir1: &Vec<DirectoryInfo>, dir2: &Vec<DirectoryInfo>) -> Vec<Diff> {
+
+/*
+fn handle_equal_len_dir(dir1: &Vec<DirectoryInfo>, dir2: &Vec<DirectoryInfo>) -> Vec<Diff> {
     
 }
 
@@ -235,4 +241,6 @@ fn handle_dir1_larger(dir1: &Vec<DirectoryInfo>, dir2: &Vec<DirectoryInfo>) -> V
 
 fn handle_dir2_larger(dir1: &Vec<DirectoryInfo>, dir2: &Vec<DirectoryInfo>) -> Vec<Diff> {
 
-}*/
+}
+
+*/

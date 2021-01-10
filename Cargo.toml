@@ -1,6 +1,6 @@
 [package]
 name = "dmap"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["max <me@mclifford.dev>"]
 edition = "2018"
 

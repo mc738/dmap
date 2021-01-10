@@ -1,8 +1,4 @@
-use crate::common::{DirectoryInfo, FileInfo};
-use std::fs::File;
-use serde::de::Unexpected::Map;
 use std::collections::HashMap;
-use std::borrow::Borrow;
 use crate::map::DMap;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
@@ -190,8 +186,4 @@ fn handle_map2_larger(map1: &mut HashMap<String,String>, map2: &mut HashMap<Stri
     diffs.append(&mut eql_result);
 
     diffs
-}
-
-fn compare_hashes(file1: &FileInfo, file2: &FileInfo) -> bool {
-    file1.hash == file2.hash
 }

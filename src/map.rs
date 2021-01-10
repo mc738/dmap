@@ -1,8 +1,8 @@
 use std::fs::{File, read_dir};
-use std::io::{BufReader, Read, Write, Error};
+use std::io::{Read, Write};
 use crypto::sha2::Sha256;
 use crypto::digest::Digest;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use std::io;
 use crate::common::{DirectoryInfo, FileInfo, InputType};
 use crate::common;
@@ -63,6 +63,8 @@ impl DMap {
         self.dir.hash.clone()
     }
     
+    pub fn get_base_path(&self) -> String { self.base_path.clone() }
+    
     pub fn flatten(&self) -> HashMap<String, String> {
         self.dir.flatten()
     }
@@ -72,38 +74,17 @@ impl DMap {
 
         // TODO remove unwrap.
         let mut output = File::create(path).unwrap();
-        output.write_all(json.as_ref());
+        match output.write_all(json.as_ref()) {
+            Ok(_) => {
+                println!("Done");
 
-        println!("Done");
+                Ok(())
+            }
+            Err(_) => Err("Could not save map.")
+        }
 
-        Ok(())
+        
     }
-}
-
-/// A wrapper for the `map` command.
-/// 
-/// This will attempt to map a directory and sub directories,
-/// then create and save a `.dmap` file with the results.  
-/// 
-/// # Arguments
-/// 
-/// * `path` - The directory path.
-/// * `output` - The path to save the results to.
-pub fn create_map(path: &Path) -> Result<DirectoryInfo, &'static str> {
-    // Map the directory and sub directories.
-    // TODO add excludes/ignores.
-    Ok(map_directory(path, path).unwrap())
-}
-
-pub fn save_map(map: DirectoryInfo, path: &Path) -> Result<(), &'static str> {
-    let json = serde_json::to_string(&map).unwrap();
-    
-    let mut output = File::create(path).unwrap();
-    output.write_all(json.as_ref());
-
-    println!("Done");
-
-    Ok(())
 }
 
 fn map_directory(path: &Path, base_path: &Path) -> io::Result<DirectoryInfo> {
@@ -128,21 +109,18 @@ fn map_directory(path: &Path, base_path: &Path) -> io::Result<DirectoryInfo> {
                 let metadata = f.metadata()?;
 
                 if metadata.is_file() {
-                    f.read_to_end(&mut data);
+                    match f.read_to_end(&mut data) {
+                        Ok(_) => {
+                            let hash = common::create_hash(data);
 
-                    let hash = common::create_hash(data);
+                            // TODO clean up this, or make a helper.
+                            let fi = FileInfo::create(entry.strip_prefix(base_path).expect("").to_str().expect("").parse().unwrap(), hash);
 
-                    // TODO clean up this, or make a helper.
-                    let fi = FileInfo::create(entry.strip_prefix(base_path).expect("").to_str().expect("").parse().unwrap(), hash);
-
-                    files.push(fi);
-
-                    //println!("Path: {:?}", entry);
-                    // println!("\tHash: {}", hash);
-                    // println!("\tMetadata: {:?}", metadata);
+                            files.push(fi);
+                        }
+                        Err(_) => {}
+                    }
                 } else {
-                    // println!("Path: {:?}", &entry);
-                    // println!("\t******* Is directory");
                     let dir = map_directory(entry.as_path(), base_path)?;
                     children.push(dir);
                 }

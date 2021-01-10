@@ -1,12 +1,7 @@
-use std::fs::{File, read_dir};
-use std::io::{BufReader, Read, Write};
-use crypto::sha2::Sha256;
-use crypto::digest::Digest;
 use std::path::Path;
-use std::io;
-use crate::common::{FileInfo, DirectoryInfo, InputType};
-use crate::map::{save_map, create_map, DMap};
-use crate::diff::{Diff, DiffReport};
+use crate::common::InputType;
+use crate::map::DMap;
+use crate::diff::DiffReport;
 
 pub mod common;
 pub mod map;

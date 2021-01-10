@@ -1,14 +1,7 @@
-use std::fs::{File, Metadata, read_dir};
-use crypto::sha2::Sha256;
-use crypto::digest::Digest;
-use std::io::{BufReader};
-use std::io::prelude::*;
-use std::{io, env};
-use std::path::Path;
-use std::iter::Map;
+use std::env;
 use crate::Command::Error;
-use std::ffi::OsStr;
 use dmap::common::InputType;
+use std::process::exit;
 
 #[derive(Debug)]
 pub struct MapCommand {
@@ -68,72 +61,48 @@ impl CommandError {
     }
 }
 
-fn create_path_type(filename: &str) -> Result<PathType, &'static str> {
-    
-    
-    let ext = Path::new(filename)
-        .extension()
-        .and_then(OsStr::to_str);
-    
-    match ext {
-        Some(s) if s == "json" || s == "dmap" => Ok(PathType::Map(String::from(filename))),
-        Some(s) => Err("Path is not a `.dmap` or `.json` file,. If this is "),
-        None => Ok(PathType::Directory(String::from(filename)))
-    }
-    
-}
-
 fn get_args() -> Command {
     let args: Vec<String> = env::args().collect();
 
     println!("Args: {:?}", args);
     
-    let run = "run".to_string();
-    
     let args_len = args.len();
     
     if args_len > 2 {
-        match &args[1] {
-            command => {
-                match command.as_ref() {
-                    "map" => {
-                        if args_len >= 4 {
-                            Command::Map(MapCommand::create(args[2].clone(), args[3].clone()))
-                        }
-                        else {
-                            Command::Error(CommandError::create(
-                                "Too few args for `map` command".to_string(),
-                                "Syntax: `dmap map [path] [output]`.".to_string()))
-                        }
-                    }
-                    "diff" => {
-                        if args_len >= 4 {
-                            
-                            let comm = DiffCommand::create(args[2].clone(), args[3].clone());
-                            
-                            
-                            Command::Diff(comm)
-                        }
-                        else {
-                            Command::Error(CommandError::create(
-                                "Too few args for `compare` command".to_string(),
-                                "Syntax: `dmap compare [dir_1] [dir_2]`.".to_string()))
-                        }
-                    }
-                    _ => {
-                        Command::Error(CommandError::create(
-                            format!("Unknown command: `{}`", command),
-                            "Known commands include `map` and `compare`.".to_string()))
-                        
-                    }
+
+        match args[1].as_str() {
+            "map" => {
+                if args_len >= 4 {
+                    Command::Map(MapCommand::create(args[2].clone(), args[3].clone()))
+                }
+                else {
+                    Command::Error(CommandError::create(
+                        "Too few args for `map` command".to_string(),
+                        "Syntax: `dmap map [path] [output]`.".to_string()))
+                }
+            }
+            "diff" => {
+                if args_len >= 4 {
+
+                    let comm = DiffCommand::create(args[2].clone(), args[3].clone());
+
+
+                    Command::Diff(comm)
+                }
+                else {
+                    Command::Error(CommandError::create(
+                        "Too few args for `compare` command".to_string(),
+                        "Syntax: `dmap compare [dir_1] [dir_2]`.".to_string()))
                 }
             }
             _ => {
                 Command::Error(CommandError::create(
-                    "Unknown command".to_string(),
-                    "Try `dmap map [path] [output]` or `dmap compare [result1] [result2]`".to_string()))
+                    format!("Unknown command: `{}`", args[1]),
+                    "Known commands include `map` and `compare`.".to_string()))
+
             }
-        }  
+        }
+ 
     }
     else {
         Command::Error(CommandError::create(
@@ -175,7 +144,14 @@ fn main() {
     
     // println!("Command: {:?}", command);
 
-    run_command(command);
+    match run_command(command) {
+        Ok(_) => {},
+        Err(e) => {
+                println!("Error: {}", e);
+                exit(1)
+            }
+            
+    };
 
     // read_directory("/home/max/Projects/dmap/".as_ref());
     // hash_file("/home/max/Data/HelloWorld.txt");

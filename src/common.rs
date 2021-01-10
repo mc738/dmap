@@ -105,7 +105,7 @@ impl InputType<'_> {
     }
 }
 
-pub fn create_hash(mut data: Vec<u8>) -> String {
+pub fn create_hash(data: Vec<u8>) -> String {
     let mut hasher = Sha256::new();
     hasher.input(data.as_slice());
     hasher.result_str()

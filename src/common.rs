@@ -68,7 +68,6 @@ impl DirectoryInfo {
         };
        
        dict
-        
    }
 }
 

@@ -10,7 +10,6 @@ use crate::diff::{Diff, DiffReport};
 
 pub mod common;
 pub mod map;
-pub mod compare;
 pub mod diff;
 
 /// A wrapper for the `map` command.
@@ -49,25 +48,12 @@ pub fn map(path: &Path, output: &Path) {
     }
 }
 
-/* *** Compare is being removed ***
-pub fn compare(path1: &Path, path2: &Path) -> Vec<Diff> {
-    
-    let map1 = create_map(path1).unwrap();
-    let map2 = create_map(path2).unwrap();
-    
-    let diff = diff::calc_diff(map1, map2);
-    
-    println!("Diff: {:?}", diff);
-    
-    diff
-}*/
-
 pub fn diff(path1: InputType, path2: InputType) -> DiffReport {
     
     // TODO remove unwraps
     let map1 = DMap::create_from_input(path1).unwrap();
     let map2 = DMap::create_from_input(path2).unwrap();
-
+    
     let diff = DiffReport::calc_diff(map1, map2);
 
     println!("Diff: {:?}", diff);

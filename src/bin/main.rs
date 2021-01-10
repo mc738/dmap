@@ -8,6 +8,7 @@ use std::path::Path;
 use std::iter::Map;
 use crate::Command::Error;
 use std::ffi::OsStr;
+use dmap::common::InputType;
 
 #[derive(Debug)]
 pub struct MapCommand {
@@ -16,7 +17,7 @@ pub struct MapCommand {
 }
 
 #[derive(Debug)]
-pub struct CompareCommand {
+pub struct DiffCommand {
     dir_1: String,
     dir_2: String
 }
@@ -30,7 +31,7 @@ pub struct CommandError {
 #[derive(Debug)]
 pub enum Command {
     Map(MapCommand),
-    Compare(CompareCommand),
+    Diff(DiffCommand),
     Error(CommandError)
 }
 
@@ -49,11 +50,11 @@ impl MapCommand {
     }
 }
 
-impl CompareCommand {
-    pub fn create(dir_1: String, dir_2: String) -> CompareCommand {
-        CompareCommand {
+impl DiffCommand {
+    pub fn create(dir_1: String, dir_2: String) -> DiffCommand {
+        DiffCommand {
             dir_1,
-            dir_2
+            dir_2,
         }
     }
 }
@@ -105,9 +106,13 @@ fn get_args() -> Command {
                                 "Syntax: `dmap map [path] [output]`.".to_string()))
                         }
                     }
-                    "compare" => {
+                    "diff" => {
                         if args_len >= 4 {
-                            Command::Compare(CompareCommand::create(args[2].clone(), args[3].clone()))
+                            
+                            let comm = DiffCommand::create(args[2].clone(), args[3].clone());
+                            
+                            
+                            Command::Diff(comm)
                         }
                         else {
                             Command::Error(CommandError::create(
@@ -147,10 +152,12 @@ fn run_command(command: Command) -> Result<(), &'static str> {
             
             // read_directory(comm.path.as_ref());
         }
-        Command::Compare(comm) => {
+        Command::Diff(comm) => {
             println!("Comparing directories `{}` and `{}`...", comm.dir_1, comm.dir_2);
-            
-            dmap::compare(comm.dir_1.as_ref(), comm.dir_2.as_ref());
+            let input_1 = InputType::create(comm.dir_1.as_str())?;
+            let input_2 = InputType::create(comm.dir_2.as_str())?;
+
+            dmap::diff(input_1, input_2);
         }
         Error(error) => {
             println!("Command error!");

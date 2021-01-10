@@ -3,6 +3,18 @@
 `dmap` is a tool for mapping directories and files and allowing easy ways to compare them.
 
 
+## Why?
+
+Sometimes you need an easy way to compare directories and their content. `git` or other command line tools/scripts may not always be an option.
+
+Also, because it was an interesting thing to build and I can definitely get some use of out it.
+
+Some use cases include:
+
+* Comparing directories on different computers.
+* Comparing and monitoring a directory over time. 
+* Auditing directories.
+
 # Commands
 
 ## Map
@@ -37,6 +49,10 @@ Compare the difference between 2 existing maps
 
 ## Tests
 
-The integration test suite can be found at [here](https://github.com/mc738/dmap_tests)
+A collection of tests are used to check enhancements/changes do not break anything and `dmap` provides consistence behaviour.
 
-* Instructions on the settings it up can he found here
+* The integration test suite can be found at [here](https://github.com/mc738/dmap_tests)
+
+* Instructions on the settings it up can he found [here](https://github.com/mc738/dmap_tests/blob/master/SETUP.md)
+
+Please feel free to contribute!

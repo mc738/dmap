@@ -56,7 +56,6 @@ fn handle_equal_len(map1: &HashMap<String,String>, map2: &mut HashMap<String,Str
     // Run through map1 to match as much as possible.
     for (k,v) in map1 {
         // If file exists in both it is a change.
-        println!("{}", k);
         match map2.contains_key(k) {
             true => {
                 if v != map2.get(k).unwrap() {
@@ -140,9 +139,8 @@ fn handle_map1_larger(map1: &mut HashMap<String,String>, map2: &mut HashMap<Stri
     // *** After ***
     // dir_1
     // dir_2
-    // |_baz <- Baz would currently be missed.
-    //
-    // However it seems to work, so... (tests 4,5,6).
+    // |_baz <- Baz would currently be missed. (NOTE: Actually it does seem to get picked up, which 
+    //                                          suggests the algorithm can be simplified.)
     // *** The comment is left for reference ***
     let mut eql_result = handle_equal_len(map1, map2);
     

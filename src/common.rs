@@ -4,12 +4,6 @@ use crypto::digest::Digest;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Map {
-    base_path: String,
-    dir: DirectoryInfo,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DirectoryInfo {
     pub(crate) path: String,
     pub(crate) hash: String,
@@ -22,15 +16,6 @@ pub struct FileInfo {
     path: String,
     pub(crate) hash: String
 }
-
-//impl Map {
-//    pub fn create(base_path: String, dir: DirectoryInfo) -> Map {
-//        Map {
-//            base_path,
-//            dir
-//        }
-//    }
-//}
 
 impl DirectoryInfo {
     pub fn create(path: String, hash: String, children: Vec<DirectoryInfo>, files:Vec<FileInfo>) -> DirectoryInfo {

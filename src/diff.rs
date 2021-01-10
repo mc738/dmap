@@ -11,24 +11,15 @@ pub enum Diff {
     Changed(String)
 }
 
-//impl Eq for Diff {}
-
 pub fn calc_diff(dir1: DirectoryInfo, dir2: DirectoryInfo) -> Vec<Diff> {
     // Check if the maps are the same length
     let mut map1 = dir1.flatten();
     let mut map2 = dir2.flatten();
     
     let mut diffs: Vec<Diff> = Vec::new();
-    
-    //let mut dir_diff = handle_dirs(dir1.children, dir2.children);
-    
-    // let map1_len = map1.files.len();
-    // let map2_len =map2.files.len();
-    
+
     let pair = (map1.len(), map2.len());
-    
-    // TODO handle child directories.
-    
+
     let mut file_diff = match pair {
         // If the same size.
         (m1, m2) if m1 == m2 => handle_equal_len(&map1, &mut map2),
@@ -52,32 +43,10 @@ pub fn calc_diff(dir1: DirectoryInfo, dir2: DirectoryInfo) -> Vec<Diff> {
     
 }
 
-/*
-fn handle_dirs(dir1: Vec<DirectoryInfo>, dir2: Vec<DirectoryInfo>) -> Vec<Diff> {
-    //
-    let pair = (dir1.len(), dir2.len());
-
-    match pair {
-        //If the same size.
-        (m1, m2) if m1 == m2 => handle_equal_len_dir(&dir1, &dir2),
-        //If map1 is 0 then all files in map2 are new.
-        (m1, _) if m1 == 0 => handle_dir1_empty(&dir2),
-        //If map2 is 0 then all files in map1 are removed.
-        (_, m2) if m2 == 0 => handle_dir2_empty(&dir1),
-        //If map1 is bigger.
-        (m1, m2) if m1 < m2 => handle_dir1_larger(&mut map1, &mut map2),
-        //If map2 is bigger.
-        (m1, m2) if m1 > m2 => handle_dir2_larger(&mut map1, &mut map2),
-        _ => Vec::new() //This should not be hit.
-    }
-} */
-
 fn handle_equal_len(map1: &HashMap<String,String>, map2: &mut HashMap<String,String>) -> Vec<Diff> {
     
     let mut diffs: Vec<Diff> = Vec::new();
-    
-    // let mut found_in_map1: Vec<String> = Vec::with_capacity(map1.len());
-    
+
     // We only need to record what has been found in map2.
     // We will cycle on map1, anything not found in map2 will be marked as `removed`.
     // If we all key a record of what has been found in map2 and then remove them.
@@ -174,6 +143,7 @@ fn handle_map1_larger(map1: &mut HashMap<String,String>, map2: &mut HashMap<Stri
     // |_baz <- Baz would currently be missed.
     //
     // However it seems to work, so... (tests 4,5,6).
+    // *** The comment is left for reference ***
     let mut eql_result = handle_equal_len(map1, map2);
     
     diffs.append(&mut eql_result);
@@ -212,76 +182,3 @@ fn handle_map2_larger(map1: &mut HashMap<String,String>, map2: &mut HashMap<Stri
 fn compare_hashes(file1: &FileInfo, file2: &FileInfo) -> bool {
     file1.hash == file2.hash
 }
-
-/*
-
-fn handle_equal_len_dir(dir1: &Vec<DirectoryInfo>, dir2: &Vec<DirectoryInfo>) -> Vec<Diff> {
-    
-    let mut diffs: Vec<Diff> = Vec::new();
-
-    // We only need to record what has been found in dir2.
-    // We will cycle on map1, anything not found in map2 will be marked as `removed`.
-    // If we all key a record of what has been found in map2 and then remove them.
-    // The ones left will be new additions.
-    let mut found_in_dir2: Vec<String> = Vec::with_capacity(dir1.len());
-
-    // Run through map1 to match as much as possible.
-    for (k,v) in map1 {
-        // If file exists in both it is a change.
-        println!("{}", k);
-        match map2.contains_key(k) {
-            true => {
-                if v != map2.get(k).unwrap() {
-                    diffs.push(Diff::Changed(k.clone()));
-                };
-
-                // Because it has been found we will keep a record.
-                found_in_map2.push(k.clone());
-            }
-            false => {
-                // If not found in map1 is a removal, 
-                // and there will be an addition of new file in map2
-                diffs.push(Diff::Remove(k.clone()));
-            }
-        }
-    };
-
-    // Remove all found items from map2
-    for found in found_in_map2 {
-        map2.remove(found.as_str());
-    };
-
-    // Anything left is an addition.
-    for (k,_) in map2 {
-        diffs.push(Diff::Add(k.clone()));
-    };
-
-    // TODO Add check to make sure both maps are empty.    
-    diffs
-}
-
-
-
-/// Handler for empty directory in original.
-/// Everything will be marked as an added.
-fn handle_dir1_empty(dir: &Vec<DirectoryInfo>) -> Vec<Diff> {
-    // Add everything in `dir` as an addition
-}
-
-/// Handler for empty directory in new.
-/// Everything will be marked as removed.
-fn handle_dir2_empty(dir: &Vec<DirectoryInfo>) -> Vec<Diff> {
-    
-}
-
-/// Handler for original directory larger than the new one.
-/// Entries will be matched, until  
-fn handle_dir1_larger(dir1: &Vec<DirectoryInfo>, dir2: &Vec<DirectoryInfo>) -> Vec<Diff> {
-    
-}
-
-fn handle_dir2_larger(dir1: &Vec<DirectoryInfo>, dir2: &Vec<DirectoryInfo>) -> Vec<Diff> {
-
-}
-
-*/

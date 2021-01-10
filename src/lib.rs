@@ -4,9 +4,9 @@ use crypto::sha2::Sha256;
 use crypto::digest::Digest;
 use std::path::Path;
 use std::io;
-use crate::common::{FileInfo, DirectoryInfo};
-use crate::map::{save_map, create_map};
-use crate::diff::Diff;
+use crate::common::{FileInfo, DirectoryInfo, InputType};
+use crate::map::{save_map, create_map, DMap};
+use crate::diff::{Diff, DiffReport};
 
 pub mod common;
 pub mod map;
@@ -27,14 +27,14 @@ pub fn map(path: &Path, output: &Path) {
     // TODO add excludes/ignores.
 
     println!("Mapping directory `{:?}`", path);
-    let map = map::create_map(path);
+    let map = DMap::create(path);
 
     match map {
-        Ok(di) => {
+        Ok(map) => {
             
-            println!("Mapped! Directory hash: {}", di.hash);
+            println!("Mapped! Directory hash: {}", map.get_hash());
             println!("Saving map to `{:?}`", output);
-            match save_map(di, output) {
+            match map.save(output) {
                 Ok(_) => {
                     println!("Done");
                 },
@@ -49,6 +49,7 @@ pub fn map(path: &Path, output: &Path) {
     }
 }
 
+/* *** Compare is being removed ***
 pub fn compare(path1: &Path, path2: &Path) -> Vec<Diff> {
     
     let map1 = create_map(path1).unwrap();
@@ -59,13 +60,15 @@ pub fn compare(path1: &Path, path2: &Path) -> Vec<Diff> {
     println!("Diff: {:?}", diff);
     
     diff
-}
+}*/
 
-pub fn diff(path1: &Path, path2: &Path) -> Vec<Diff> {
-    let map1 = create_map(path1).unwrap();
-    let map2 = create_map(path2).unwrap();
+pub fn diff(path1: InputType, path2: InputType) -> DiffReport {
+    
+    // TODO remove unwraps
+    let map1 = DMap::create_from_input(path1).unwrap();
+    let map2 = DMap::create_from_input(path2).unwrap();
 
-    let diff = diff::calc_diff(map1, map2);
+    let diff = DiffReport::calc_diff(map1, map2);
 
     println!("Diff: {:?}", diff);
 

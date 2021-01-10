@@ -3,6 +3,12 @@ use std::fs::File;
 use serde::de::Unexpected::Map;
 use std::collections::HashMap;
 use std::borrow::Borrow;
+use crate::map::DMap;
+
+#[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
+pub struct DiffReport {
+    diffs: Vec<Diff>
+}
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum Diff {
@@ -11,37 +17,46 @@ pub enum Diff {
     Changed(String)
 }
 
-pub fn calc_diff(dir1: DirectoryInfo, dir2: DirectoryInfo) -> Vec<Diff> {
-    // Check if the maps are the same length
-    let mut map1 = dir1.flatten();
-    let mut map2 = dir2.flatten();
-    
-    let mut diffs: Vec<Diff> = Vec::new();
+impl DiffReport {
 
-    let pair = (map1.len(), map2.len());
+    pub fn create(diffs: Vec<Diff>) -> DiffReport {
+        DiffReport {
+            diffs
+        }
+    }
+    
+    pub fn calc_diff(dmap1: DMap, dmap2: DMap) -> DiffReport {
+        // Check if the maps are the same length
+        let mut map1 = dmap1.flatten();
+        let mut map2 = dmap2.flatten();
 
-    let mut file_diff = match pair {
-        // If the same size.
-        (m1, m2) if m1 == m2 => handle_equal_len(&map1, &mut map2),
-        // If map1 is 0 then all files in map2 are new.
-        (m1, _) if m1 == 0 => handle_map1_empty(&map2),
-        // If map2 is 0 then all files in map1 are removed.
-        (_, m2) if m2 == 0 => handle_map2_empty(&map1),
-        // If map1 is bigger.
-        (m1, m2) if m1 < m2 => handle_map1_larger(&mut map1, &mut map2),
-        // If map2 is bigger.
-        (m1, m2) if m1 > m2 => handle_map2_larger(&mut map1, &mut map2),
-        _ => Vec::new() // This should not be hit.
-    };
-    
-    //diffs.append(&mut dir_diff);
-    diffs.append(&mut file_diff);
-    
-    diffs.sort();
-    
-    diffs
-    
+        let mut diffs: Vec<Diff> = Vec::new();
+
+        let pair = (map1.len(), map2.len());
+
+        let mut file_diff = match pair {
+            // If the same size.
+            (m1, m2) if m1 == m2 => handle_equal_len(&map1, &mut map2),
+            // If map1 is 0 then all files in map2 are new.
+            (m1, _) if m1 == 0 => handle_map1_empty(&map2),
+            // If map2 is 0 then all files in map1 are removed.
+            (_, m2) if m2 == 0 => handle_map2_empty(&map1),
+            // If map1 is bigger.
+            (m1, m2) if m1 < m2 => handle_map1_larger(&mut map1, &mut map2),
+            // If map2 is bigger.
+            (m1, m2) if m1 > m2 => handle_map2_larger(&mut map1, &mut map2),
+            _ => Vec::new() // This should not be hit.
+        };
+
+        //diffs.append(&mut dir_diff);
+        diffs.append(&mut file_diff);
+
+        diffs.sort();
+
+        DiffReport::create(diffs)
+    }
 }
+
 
 fn handle_equal_len(map1: &HashMap<String,String>, map2: &mut HashMap<String,String>) -> Vec<Diff> {
     

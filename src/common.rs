@@ -62,8 +62,6 @@ impl DirectoryInfo {
     
    pub fn flatten(&self) -> HashMap<String, String> {
         let mut dict  = self.files_to_dict();
-        
-      
        
         for di in &self.children {
             dict.extend(di.flatten())

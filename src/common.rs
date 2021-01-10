@@ -17,6 +17,12 @@ pub struct FileInfo {
     pub(crate) hash: String
 }
 
+#[derive(Debug)]
+pub enum PathType {
+    Directory(String),
+    Map(String)
+}
+
 impl DirectoryInfo {
     pub fn create(path: String, hash: String, children: Vec<DirectoryInfo>, files:Vec<FileInfo>) -> DirectoryInfo {
         DirectoryInfo {

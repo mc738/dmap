@@ -7,6 +7,7 @@ use std::{io, env};
 use std::path::Path;
 use std::iter::Map;
 use crate::Command::Error;
+use std::ffi::OsStr;
 
 #[derive(Debug)]
 pub struct MapCommand {
@@ -31,6 +32,12 @@ pub enum Command {
     Map(MapCommand),
     Compare(CompareCommand),
     Error(CommandError)
+}
+
+#[derive(Debug)]
+pub enum PathType {
+    Directory(String),
+    Map(String)
 }
 
 impl MapCommand {
@@ -58,6 +65,21 @@ impl CommandError {
             hint
         }
     }
+}
+
+fn create_path_type(filename: &str) -> Result<PathType, &'static str> {
+    
+    
+    let ext = Path::new(filename)
+        .extension()
+        .and_then(OsStr::to_str);
+    
+    match ext {
+        Some(s) if s == "json" || s == "dmap" => Ok(PathType::Map(String::from(filename))),
+        Some(s) => Err("Path is not a `.dmap` or `.json` file,. If this is "),
+        None => Ok(PathType::Directory(String::from(filename)))
+    }
+    
 }
 
 fn get_args() -> Command {
@@ -152,3 +174,36 @@ fn main() {
     // hash_file("/home/max/Data/HelloWorld.txt");
     // println!("Hello, world!");
 }
+
+
+#[cfg(test)]
+mod tests {
+    use crate::{create_path_type, PathType};
+
+    #[test]
+    fn dir_PathType_test_() {
+        
+        let expected = PathType::Directory(String::from("/home/Test"));
+        
+        let actual = create_path_type("/home/Test");
+        
+        
+        assert_eq!(expected, actual);
+    }
+
+    fn file_PathType_test_() {
+
+        let expected = PathType::Directory(String::from("/home/foo/bar.txt"));
+
+        let actual = create_path_type("/home/foo/bar.txt");
+
+
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn dmap_PathType_test() {
+        panic!("Make this test fail");
+    }
+}
+

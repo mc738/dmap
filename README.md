@@ -39,7 +39,7 @@ Map a directory, save the results and compare with a previous map.
 
 ## Diff
 
-Compare the difference between 2 existing maps
+Compare the difference between 2 directories
 
 * Syntax: `dmap diff [map1] [map2]`
 * Args:

@@ -51,6 +51,15 @@ impl DiffReport {
 
         DiffReport::create(diffs)
     }
+    
+    /*
+    pub fn to_json(&self) -> String {
+        
+    }
+    
+    pub fn to_lines(&self) -> Vec<String> {
+        
+    }*/
 }
 
 

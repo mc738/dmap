@@ -7,6 +7,7 @@ use std::io;
 use crate::common::{DirectoryInfo, FileInfo, InputType};
 use crate::common;
 use std::collections::HashMap;
+use rlog::Log;
 
 pub struct DMap {
     base_path: String,
@@ -76,8 +77,9 @@ impl DMap {
         let mut output = File::create(path).unwrap();
         match output.write_all(json.as_ref()) {
             Ok(_) => {
-                println!("Done");
-
+                
+                Log::print_success(String::from("dmap"), String::from("Mapped successfully"));
+                
                 Ok(())
             }
             Err(_) => Err("Could not save map.")

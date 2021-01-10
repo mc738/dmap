@@ -15,8 +15,8 @@ pub enum Diff {
 
 pub fn calc_diff(dir1: DirectoryInfo, dir2: DirectoryInfo) -> Vec<Diff> {
     // Check if the maps are the same length
-    let mut map1 = dir1.files_to_dict();
-    let mut map2 = dir2.files_to_dict();
+    let mut map1 = dir1.flatten();
+    let mut map2 = dir2.flatten();
     
     let mut diffs: Vec<Diff> = Vec::new();
     
@@ -213,10 +213,51 @@ fn compare_hashes(file1: &FileInfo, file2: &FileInfo) -> bool {
     file1.hash == file2.hash
 }
 
-
 /*
+
 fn handle_equal_len_dir(dir1: &Vec<DirectoryInfo>, dir2: &Vec<DirectoryInfo>) -> Vec<Diff> {
     
+    let mut diffs: Vec<Diff> = Vec::new();
+
+    // We only need to record what has been found in dir2.
+    // We will cycle on map1, anything not found in map2 will be marked as `removed`.
+    // If we all key a record of what has been found in map2 and then remove them.
+    // The ones left will be new additions.
+    let mut found_in_dir2: Vec<String> = Vec::with_capacity(dir1.len());
+
+    // Run through map1 to match as much as possible.
+    for (k,v) in map1 {
+        // If file exists in both it is a change.
+        println!("{}", k);
+        match map2.contains_key(k) {
+            true => {
+                if v != map2.get(k).unwrap() {
+                    diffs.push(Diff::Changed(k.clone()));
+                };
+
+                // Because it has been found we will keep a record.
+                found_in_map2.push(k.clone());
+            }
+            false => {
+                // If not found in map1 is a removal, 
+                // and there will be an addition of new file in map2
+                diffs.push(Diff::Remove(k.clone()));
+            }
+        }
+    };
+
+    // Remove all found items from map2
+    for found in found_in_map2 {
+        map2.remove(found.as_str());
+    };
+
+    // Anything left is an addition.
+    for (k,_) in map2 {
+        diffs.push(Diff::Add(k.clone()));
+    };
+
+    // TODO Add check to make sure both maps are empty.    
+    diffs
 }
 
 

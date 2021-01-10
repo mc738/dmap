@@ -1,38 +1,93 @@
 use std::fs::{File, read_dir};
-use std::io::{BufReader, Read, Write};
+use std::io::{Read, Write};
 use crypto::sha2::Sha256;
 use crypto::digest::Digest;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use std::io;
-use crate::common::{DirectoryInfo, FileInfo};
+use crate::common::{DirectoryInfo, FileInfo, InputType};
 use crate::common;
+use std::collections::HashMap;
+use rlog::Log;
 
-/// A wrapper for the `map` command.
-/// 
-/// This will attempt to map a directory and sub directories,
-/// then create and save a `.dmap` file with the results.  
-/// 
-/// # Arguments
-/// 
-/// * `path` - The directory path.
-/// * `output` - The path to save the results to.
-pub fn create_map(path: &Path) -> Result<DirectoryInfo, &'static str> {
-    // Map the directory and sub directories.
-    // TODO add excludes/ignores.
-    Ok(map_directory(path, path).unwrap())
+pub struct DMap {
+    base_path: String,
+    dir: DirectoryInfo,
+    //signature: String,
 }
 
-pub fn save_map(map: DirectoryInfo, path: &Path) -> Result<(), &'static str> {
-    let json = serde_json::to_string(&map).unwrap();
+impl DMap {
     
-    let mut output = File::create(path).unwrap();
-    output.write_all(json.as_ref());
+    pub fn create_from_input(input: InputType) -> Result<DMap, &'static str> {
+        match input {
+            InputType::Directory(p) => DMap::create(p),
+            InputType::Map(p) => DMap::load(p)
+        }
+    }
+    
+    pub fn create(path: &Path) -> Result<DMap, &'static str> {
+        
+        // TODO handle this better!
+        let base_path = path.display().to_string();
+        
+        match map_directory(path, path) {
+            Ok(dir) => Ok(DMap {
+                base_path,
+                dir,
+            }),
+            Err(_) => Err("Could not create map")
+        }
+    }
+    
+    pub fn load(path: &Path) -> Result<DMap, &'static str> {
 
-    println!("Done");
+        let base_path = path.display().to_string();
+        
+        // TODO Remove unwrap.
+        let mut file = File::open(path).unwrap();
+        
+        let mut json = String::new();
+        
+        match file.read_to_string(&mut json) {
+            Ok(_) => {
+                // TODO Remove unwrap.
+                let dir: DirectoryInfo = serde_json::from_str(json.as_str()).unwrap();
+                Ok(DMap {
+                    base_path,
+                    dir,
+                })
+            }
+            Err(_) => Err("Could not parse map")
+        }
+    }
+    
+    pub fn get_hash(&self) -> String {
+        self.dir.hash.clone()
+    }
+    
+    pub fn get_base_path(&self) -> String { self.base_path.clone() }
+    
+    pub fn flatten(&self) -> HashMap<String, String> {
+        self.dir.flatten()
+    }
+    
+    pub fn save(&self, path: &Path) -> Result<(), &'static str> {
+        let json = serde_json::to_string(&self.dir).unwrap();
 
-    Ok(())
+        // TODO remove unwrap.
+        let mut output = File::create(path).unwrap();
+        match output.write_all(json.as_ref()) {
+            Ok(_) => {
+                
+                Log::print_success(String::from("dmap"), String::from("Mapped successfully"));
+                
+                Ok(())
+            }
+            Err(_) => Err("Could not save map.")
+        }
+
+        
+    }
 }
-
 
 fn map_directory(path: &Path, base_path: &Path) -> io::Result<DirectoryInfo> {
     let mut entries = read_dir(path)?
@@ -41,11 +96,8 @@ fn map_directory(path: &Path, base_path: &Path) -> io::Result<DirectoryInfo> {
 
     // The order in which `read_dir` returns entries is not guaranteed. If reproducible
     // ordering is required the entries should be explicitly sorted.
-
+    // This may not be needed, tests pass without it, but it makes the map nicer.
     entries.sort();
-
-    // println!("Directory: {:?}", entries);
-    // The entries have now been sorted by their path.
 
     let mut files: Vec<FileInfo> = Vec::new();
     let mut children: Vec<DirectoryInfo> = Vec::new();
@@ -59,20 +111,18 @@ fn map_directory(path: &Path, base_path: &Path) -> io::Result<DirectoryInfo> {
                 let metadata = f.metadata()?;
 
                 if metadata.is_file() {
-                    f.read_to_end(&mut data);
+                    match f.read_to_end(&mut data) {
+                        Ok(_) => {
+                            let hash = common::create_hash(data);
 
-                    let hash = common::create_hash(data);
+                            // TODO clean up this, or make a helper.
+                            let fi = FileInfo::create(entry.strip_prefix(base_path).expect("").to_str().expect("").parse().unwrap(), hash);
 
-                    let fi = FileInfo::create(entry.strip_prefix(base_path).expect("").to_str().expect("").parse().unwrap(), hash);
-
-                    files.push(fi);
-
-                    //println!("Path: {:?}", entry);
-                    // println!("\tHash: {}", hash);
-                    // println!("\tMetadata: {:?}", metadata);
+                            files.push(fi);
+                        }
+                        Err(_) => {}
+                    }
                 } else {
-                    // println!("Path: {:?}", &entry);
-                    // println!("\t******* Is directory");
                     let dir = map_directory(entry.as_path(), base_path)?;
                     children.push(dir);
                 }
@@ -95,7 +145,6 @@ fn hash_directory(children: &Vec<DirectoryInfo>, files: &Vec<FileInfo>) -> Strin
     // Append all directory hashes.
     for c in children {
         buffer.push_str(&c.hash);
-        
     };
 
     // Append all file hashes.
@@ -106,48 +155,4 @@ fn hash_directory(children: &Vec<DirectoryInfo>, files: &Vec<FileInfo>) -> Strin
     hasher.input_str(&*buffer);
 
     hasher.result_str()
-}
-
-// This routine is adapted from the *old* Path's `path_relative_from`
-// function, which works differently from the new `relative_from` function.
-// In particular, this handles the case on unix where both paths are
-// absolute but with only the root as the common directory.
-fn path_relative_from(path: &Path, base: &Path) -> Option<PathBuf> {
-    use std::path::Component;
-
-    if path.is_absolute() != base.is_absolute() {
-        if path.is_absolute() {
-            Some(PathBuf::from(path))
-        } else {
-            None
-        }
-    } else {
-        let mut ita = path.components();
-        let mut itb = base.components();
-        let mut comps: Vec<Component> = vec![];
-        loop {
-            match (ita.next(), itb.next()) {
-                (None, None) => break,
-                (Some(a), None) => {
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
-                }
-                (None, _) => comps.push(Component::ParentDir),
-                (Some(a), Some(b)) if comps.is_empty() && a == b => (),
-                (Some(a), Some(b)) if b == Component::CurDir => comps.push(a),
-                (Some(_), Some(b)) if b == Component::ParentDir => return None,
-                (Some(a), Some(_)) => {
-                    comps.push(Component::ParentDir);
-                    for _ in itb {
-                        comps.push(Component::ParentDir);
-                    }
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
-                }
-            }
-        }
-        Some(comps.iter().map(|c| c.as_os_str()).collect())
-    }
 }

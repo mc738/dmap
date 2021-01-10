@@ -49,7 +49,7 @@ pub fn map(path: &Path, output: &Path) {
     }
 }
 
-pub fn compare(path1: &Path, path2: &Path) {
+pub fn compare(path1: &Path, path2: &Path) -> Vec<Diff> {
     
     let map1 = create_map(path1).unwrap();
     let map2 = create_map(path2).unwrap();
@@ -57,4 +57,6 @@ pub fn compare(path1: &Path, path2: &Path) {
     let diff = diff::calc_diff(map1, map2);
     
     println!("Diff: {:?}", diff);
+    
+    diff
 }

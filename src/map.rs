@@ -19,7 +19,7 @@ use crate::common;
 pub fn create_map(path: &Path) -> Result<DirectoryInfo, &'static str> {
     // Map the directory and sub directories.
     // TODO add excludes/ignores.
-    Ok(map_directory(path).unwrap())
+    Ok(map_directory(path, path).unwrap())
 }
 
 pub fn save_map(map: DirectoryInfo, path: &Path) -> Result<(), &'static str> {
@@ -34,7 +34,7 @@ pub fn save_map(map: DirectoryInfo, path: &Path) -> Result<(), &'static str> {
 }
 
 
-fn map_directory(path: &Path) -> io::Result<DirectoryInfo> {
+fn map_directory(path: &Path, base_path: &Path) -> io::Result<DirectoryInfo> {
     let mut entries = read_dir(path)?
         .map(|res| res.map(|e| e.path()))
         .collect::<Result<Vec<_>, io::Error>>()?;
@@ -63,7 +63,7 @@ fn map_directory(path: &Path) -> io::Result<DirectoryInfo> {
 
                     let hash = common::create_hash(data);
 
-                    let fi = FileInfo::create(entry.strip_prefix(path).expect("").to_str().expect("").parse().unwrap(), hash);
+                    let fi = FileInfo::create(entry.strip_prefix(base_path).expect("").to_str().expect("").parse().unwrap(), hash);
 
                     files.push(fi);
 
@@ -73,7 +73,7 @@ fn map_directory(path: &Path) -> io::Result<DirectoryInfo> {
                 } else {
                     // println!("Path: {:?}", &entry);
                     // println!("\t******* Is directory");
-                    let dir = map_directory(entry.as_path())?;
+                    let dir = map_directory(entry.as_path(), base_path)?;
                     children.push(dir);
                 }
             }

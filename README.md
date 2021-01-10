@@ -33,3 +33,10 @@ Compare the difference between 2 existing maps
 * Args:
     * `map1` - the path to map 1.
     * `map2` - the path to map 2.
+  
+
+## Tests
+
+The integration test suite can be found at [here](https://github.com/mc738/dmap_tests)
+
+* Instructions on the settings it up can he found here
